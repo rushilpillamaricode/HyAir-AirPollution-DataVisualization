@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <title>Air Quality Map</title>
+  <link rel="icon" type="image/x-icon" href="/logo.ico">
+  <!-- <link rel="stylesheet" type="text/css" href="styles.css"> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-chartjs-3d@1.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      font-family: 'Prompt', sans-serif;
+      margin: 0;
+    }
+    #map {
+      margin-top: 100px;
+      margin-left: 120px;
+      border-radius: 10px;
+      height: 500px;
+      width: 700px;
+    }
+
+    nav {
+      background-color: var(--background);
+      height: 0px;
+      width: 100%;
+    }
+
+    li.logo {
+      color: white;
+      font-size: 30px;
+      line-height: 80px;
+      padding: 0 100px;
+      font-weight: bold;
+    }
+
+    nav ul {
+      float: right;
+      margin-right: 20px;
+    }
+
+    nav ul li {
+      display: inline-block;
+      line-height: 80px;
+      margin: 0 5px;
+    }
+
+    nav ul li a {
+      color: white;
+      font-size: 20px;
+      padding: 7px 13px;
+      border-radius: 3px;
+
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: rgb(60, 255, 0);
+      transition: .5s;
+    }
+
+
+    @media (max-width: 952px) {
+      li.logo {
+        font-size: 30px;
+        padding-left: 50px;
+      }
+
+      nav ul li a {
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 858px) {
+
+      ul {
+        position: fixed;
+        width: 100%;
+        height: 90vh;
+        background: #ffffff;
+        top: 80px;
+        left: -100%;
+        text-align: center;
+        transition: all .5s;
+      }
+
+      nav ul li {
+        display: block;
+        margin: 20px 0;
+        line-height: 30px;
+      }
+
+      nav ul li a {
+        font-size: 20px;
+      }
+
+    }
+
+    li.logo:hover {
+      color: rgb(60, 255, 0);
+      transition: .5s;
+    }
+
+    #popout-container {
+      position: absolute;
+      top: 185px;
+      left: 85%;
+      width: 300px;
+      height: 500px;
+      margin-top: 500px;
+      color: rgb(255, 255, 255);
+      transform: translate(-50%, -50%);
+      padding: 10px;
+
+      z-index: 9999;
+      border-radius: 20px;
+      background-color: #101010;
+      color: rgb(0, 0, 0);
+    }
+
+    #popout-container2 {
+      position: relative;
+      left: 120px;
+      width: 1000px;
+      margin-top: 20px;
+      padding-right: 100px;
+      border-radius: 5px;
+      background-color: #a0a0a0;
+      color: rgb(0, 0, 0);
+      z-index: 9999;
+      display: flex;
+      flex-wrap: nowrap;
+      /* Prevent wrapping to the next line */
+      justify-content: flex-start;
+      /* Align items from the start */
+      align-items: center;
+      /* Center align vertically */
+    }
+
+    #pollutant-levels {
+      margin-top: 500px;
+      line-height: 1.5;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #pollutant-levels2 {
+      line-height: 1.5;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    body {
+      background-color: #101010;
+    }
+
+    .popout-container {
+      position: relative;
+      width: 300px;
+      margin-top: 300px;
+      margin-left: 20px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      background-color: #d2d2d2;
+      color: rgb(0, 0, 0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      float: left;
+      clear: left;
+    }
+
+    .chart-item {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .circle-chart {
+      display: inline-block;
+      margin: 0 auto;
+      /* Center the circular chart */
+      max-width: 100%;
+      margin-left: 100px;
+      /* Limit the width to prevent overflow */
+    }
+
+
+    /* Custom marker styles */
+    .custom-text-box {
+      background-image: url(greeen.ico);
+      background-repeat: no-repeat;
+      background-size: 80%;
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #000000;
+      /* Marker color */
+      font-size: 12px;
+      /* Marker size */
+      /*text-shadow: 3px 3px 3px #3fc75f;*/
+      /* Optional text shadow */
+    }
+
+    .custom-yellow-text-box {
+      background-image: url(yelloww.ico);
+      background-repeat: no-repeat;
+      background-size: 80%;
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #000000;
+      /* Marker color */
+      font-size: 12px;
+      /* Marker size */
+      /* Optional text shadow */
+    }
+
+    .custom-red-text-box {
+      background-image: url(reddd.ico);
+      background-repeat: no-repeat;
+      background-size: 80%;
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #000000;
+      /* Marker color */
+      font-size: 12px;
+      /* Marker size */
+      /* Optional text shadow */
+    }
+
+    /* Popout container styles */
+    .air-index-text {
+      position: absolute;
+      top: 40%;
+      left: 40%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+    }
+
+    /* Vertical bar styles */
+    .vertical-bar {
+      position: absolute;
+      top: 550px;
+      left: 20px;
+      width: 20px;
+      height: 300px;
+      background: linear-gradient(to bottom, #00FF00 0%, #FFFF00 50%, #FF0000 100%);
+      border-radius: 10px;
+    }
+
+    .bar-label {
+      position: absolute;
+      top: 400px;
+      left: 45px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .bar-label span {
+      position: relative;
+      display: block;
+      top: 50px;
+    }
+
+    .chart-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .graph-container {
+      flex-basis: calc(16.66% - 20px);
+      /* Distribute equally among 6 columns (100% / 6) and account for margins */
+      text-align: center;
+    }
+
+    .circle-chart {
+      display: inline-block;
+      margin: 0 auto;
+      /* Center the circular chart */
+      max-width: 100%;
+      /* Limit the width to prevent overflow */
+    }
+
+    .circle-chart {
+      display: inline-block;
+      margin: 0 auto;
+      /* Center the circular chart */
+      max-width: 100%;
+      /* Limit the width to prevent overflow */
+    }
+
+    h3 {
+      color: white;
+    }
+
+    h4 {
+      position: relative;
+      left: -90px;
+      color: white;
+      display: inline-block;
+      text-size-adjust: auto;
+      margin-left: 220px;
+      text-align: justify;
+      top: 50px;
+    }
+    h4:hover{
+      color: #00FF00;
+    }
+    h6{
+      color: #00FF00;
+      text-align: center;
+    }
+    @keyframes scaleImage {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(0.9);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    #popout-container h3:hover{
+      color: #00FF00;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <ul>
+      <img src="logo.ico" style="height: 50px; width: 50px; position: absolute; left: 35px; top: 30px">
+      <li class="logo" style="position: absolute; left: 0px;">HyAir</li>
+      <li><a class="active" style="position: absolute; right: 250px;top: 0px;"href="/index.html">Home</a></li>
+      <li><a href="/about.html" style="position: absolute; right: 100px;top: 0px;">About Us</a></li>
+    </ul>
+  </nav>
+  <div style="position: relative; left: 65px; top: 150px; margin-left: 20px; overflow: hidden;">
+    <img id="hyderabad-link" src="/Hyd.jpeg" style="border-radius: 200px; width: 16%; height: 16%; margin-left: 30px; margin-right: 80px; animation: scaleImage 2s infinite;">
+    <img id="mumbai-link" src="/mumbai.jpeg" style="border-radius: 200px; width: 16%; height: 16%; animation: scaleImage 2s infinite;">
+    <img id="delhi-link" src="/delhi.jpeg" style="border-radius: 200px; width: 16%; height: 16%; margin-left: 80px; animation: scaleImage 2s infinite;">
+    <img id="ahmedabad-link" src="/ahmedabad.jpeg" style="border-radius: 200px; width: 16%; height: 16%; margin-left: 80px; animation: scaleImage 2s infinite;">
+  </div>
+  </div>
+  <br><br>
+  <br><br>
+  <h4 id="hyderabad-link" style="position: relative; left: -55px;">Hyderabad</h4>
+  <h4 id="mumbai-link" style="position: relative; left: -85px;">Mumbai</h4>
+  <h4 id="delhi-link" >Delhi</h4>
+  <h4 id="ahmedabad-link" style="position: relative; left: -105px;">Ahmedabad</h4>
+  <div id="map"></div>
+
+  <div id="popout-container">
+    <h3 style="position: relative; left: 15px;">Pollutant Levels for <span id="region-name">Regions</span></h3>
+  </div>
+  
+  <br><br><br><br><br>
+  <div id="popout-container2">
+    <div id="pollutant-levels2" class="chart-container" style="margin-left: 20px;margin-top: 30px;">
+      <div class="graph-container">
+        <div class="chart-item">
+          <p style="position: relative; left: 0px;">PM2.5 Levels: </p>
+          <div id="pm25-chart" class="circle-chart"></div>
+        </div>
+      </div>
+      <div class="graph-container">
+        <div class="chart-item">
+          <p style="position: relative; left: 100px;">PM10 Levels: </p>
+          <div id="pm10-chart" class="circle-chart"></div>
+        </div>
+      </div>
+      <div class="graph-container">
+        <div class="chart-item">
+          <p style="position: relative; left: 200px;">SO2 Levels: </p>
+          <div id="so2-chart" class="circle-chart"></div>
+        </div>
+      </div>
+      <div class="graph-container">
+        <div class="chart-item">
+          <p style="position: relative; left: 300px;">O3 Levels: </p>
+          <div id="o3-chart" class="circle-chart"></div>
+        </div>
+      </div>
+      <div class="graph-container">
+        <div class="chart-item">
+          <p style="position: relative; left: 400px;">CO Levels: </p>
+          <div id="co-chart" class="circle-chart"></div>
+        </div>
+      </div>
+      <div class="graph-container">
+        <div class="chart-item">
+          <p style="position: relative; left: 500px;">NO2 Levels: </p>
+          <div id="no2-chart" class="circle-chart"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- Vertical bar -->
+
+  <div class="vertical-bar"></div>
+  <div class="bar-label">
+    <span style="position: relative; top: 150px;">Good</span>
+    <span style="position: relative; top: 270px;">Moderate</span>
+    <span style="position: relative; top: 380px;">Poor</span>
+  </div>
+
+  <footer style="position: relative; height: 100px;width: 100%;
+  text-align: center;left: -15px; line-height: 100px;color: #ffffff;font-size: 20px;z-index: 1;">
+    Copyright - 2023 by HyAir
+  </footer>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
